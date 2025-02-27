@@ -4,6 +4,7 @@
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 #include <math.h>
+#include "shader_loader.h"
 
 int main() {
 	if (!glfwInit()) {
@@ -60,33 +61,9 @@ int main() {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
 
-	const char* vert_shader =
-		"#version 410 core\n"
-		"layout (location=0) in vec3 vp;"
-		"void main() {"
-		"	gl_Position = vec4(vp.x, vp.y, vp.z, 1.0);"
-		"}";
-
-	const char* frag_shader =
-		"#version 410 core\n"
-		"out vec4 frag_colour;"
-		"uniform vec4 in_color;"
-		"void main() {"
-			"frag_colour = in_color;"
-		"}";
-
-	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vs, 1, &vert_shader, NULL);
-	glCompileShader(vs);
-
-	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fs, 1, &frag_shader, NULL);
-	glCompileShader(fs);
-
-	GLuint shader_program = glCreateProgram();
-	glAttachShader(shader_program, fs);
-	glAttachShader(shader_program, vs);
-	glLinkProgram(shader_program);
+	//Загружает шейдеры из файлов и подключает их в прогу
+	Shader_loader shadering;
+	GLuint shader_program = shadering.oneLinkProgram();
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); //Сообщает как интерпретировать вершинные данные. 
 	glEnableVertexAttribArray(0); 
@@ -97,21 +74,14 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
 
-		float vertexColorLocation = glGetUniformLocation(shader_program, "in_color");
-
 		float timeValue = glfwGetTime();
-
-		glUniform4f(vertexColorLocation, 1-sin(timeValue), cos(timeValue), sin(timeValue), 1.0f);
+		shadering.uniform_set_vec(shader_program, "in_color", 1 - sin(timeValue), cos(timeValue), sin(timeValue), 1.0f);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		//glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-		//В методичке 1.0, 1.0, 1.0
-		
+	
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
 	glfwTerminate();
 	return 0;
 }
