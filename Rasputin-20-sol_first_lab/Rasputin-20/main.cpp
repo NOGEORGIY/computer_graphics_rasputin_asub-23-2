@@ -56,10 +56,10 @@ int main() {
 
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STREAM_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STREAM_DRAW);
 
 	//Загружает шейдеры из файлов и подключает их в прогу
 	Shader_loader shadering;
@@ -73,12 +73,22 @@ int main() {
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
-
 		float timeValue = glfwGetTime();
+		//"При создании рендера добавить элементы движения для объекта"
+		points[0] = points[0] + cos(timeValue) / 1000;
+		points[1] = points[1] + cos(timeValue) / 1000;
+		points[3] = points[3] + cos(timeValue) / 1000;
+		points[4] = points[4] + cos(timeValue) / 1000;
+		points[6] = points[6] + cos(timeValue) / 1000;
+		points[7] = points[7] + cos(timeValue) / 1000;
+		points[9] = points[9] + cos(timeValue) / 1000;
+		points[10] = points[10] + cos(timeValue) / 1000;
+		glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+
 		shadering.uniform_set_vec(shader_program, "in_color", 1 - sin(timeValue), cos(timeValue), sin(timeValue), 1.0f);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

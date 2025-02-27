@@ -30,5 +30,5 @@ F:\Github\repos\CG\Rasputin-20-sol_first_lab\Rasputin-20\shader_loader.h(177,23)
 F:\Github\repos\CG\Rasputin-20-sol_first_lab\Rasputin-20\shader_loader.h(180,23): warning C4244: аргумент: преобразование "float" в "GLint", возможна потеря данных
 F:\Github\repos\CG\Rasputin-20-sol_first_lab\Rasputin-20\shader_loader.h(183,23): warning C4244: аргумент: преобразование "float" в "GLint", возможна потеря данных
 F:\Github\repos\CG\Rasputin-20-sol_first_lab\Rasputin-20\shader_loader.h(191,29): warning C4244: инициализация: преобразование "GLint" в "float", возможна потеря данных
-F:\Github\repos\CG\Rasputin-20-sol_first_lab\Rasputin-20\main.cpp(77,19): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
+F:\Github\repos\CG\Rasputin-20-sol_first_lab\Rasputin-20\main.cpp(76,19): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
   Rasputin-20.vcxproj -> F:\Github\repos\CG\Rasputin-20-sol_first_lab\x64\Debug\Rasputin-20.exe
