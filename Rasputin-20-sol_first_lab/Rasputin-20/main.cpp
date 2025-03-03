@@ -34,9 +34,9 @@ int main() {
 		return 1;
 	}
 
-	//В VBO записываются вершины
-	//VAO нужно для отрисовки
-	//EBO хранит индексы вершин, выбирая которые можно рисовать фигуры
+	//Г‚ VBO Г§Г ГЇГЁГ±Г»ГўГ ГѕГІГ±Гї ГўГҐГ°ГёГЁГ­Г»
+	//VAO Г­ГіГ¦Г­Г® Г¤Г«Гї Г®ГІГ°ГЁГ±Г®ГўГЄГЁ
+	//EBO ГµГ°Г Г­ГЁГІ ГЁГ­Г¤ГҐГЄГ±Г» ГўГҐГ°ГёГЁГ­, ГўГ»ГЎГЁГ°Г Гї ГЄГ®ГІГ®Г°Г»ГҐ Г¬Г®Г¦Г­Г® Г°ГЁГ±Г®ГўГ ГІГј ГґГЁГЈГіГ°Г»
 	GLuint VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -61,11 +61,11 @@ int main() {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STREAM_DRAW);
 
-	//Загружает шейдеры из файлов и подключает их в прогу
+	//Г‡Г ГЈГ°ГіГ¦Г ГҐГІ ГёГҐГ©Г¤ГҐГ°Г» ГЁГ§ ГґГ Г©Г«Г®Гў ГЁ ГЇГ®Г¤ГЄГ«ГѕГ·Г ГҐГІ ГЁГµ Гў ГЇГ°Г®ГЈГі
 	Shader_loader shadering;
 	GLuint shader_program = shadering.oneLinkProgram();
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); //Сообщает как интерпретировать вершинные данные. 
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); //Г‘Г®Г®ГЎГ№Г ГҐГІ ГЄГ ГЄ ГЁГ­ГІГҐГ°ГЇГ°ГҐГІГЁГ°Г®ГўГ ГІГј ГўГҐГ°ГёГЁГ­Г­Г»ГҐ Г¤Г Г­Г­Г»ГҐ. 
 	glEnableVertexAttribArray(0); 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBindVertexArray(0);
@@ -74,15 +74,16 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
 		float timeValue = glfwGetTime();
-		//"При создании рендера добавить элементы движения для объекта"
-		points[0] = points[0] + cos(timeValue) / 2000;
-		points[1] = points[1] + cos(timeValue) / 2000;
-		points[3] = points[3] + cos(timeValue) / 2000;
-		points[4] = points[4] + cos(timeValue) / 2000;
-		points[6] = points[6] + cos(timeValue) / 2000;
-		points[7] = points[7] + cos(timeValue) / 2000;
-		points[9] = points[9] + cos(timeValue) / 2000;
-		points[10] = points[10] + cos(timeValue) / 2000;
+		//"ГЏГ°ГЁ Г±Г®Г§Г¤Г Г­ГЁГЁ Г°ГҐГ­Г¤ГҐГ°Г  Г¤Г®ГЎГ ГўГЁГІГј ГЅГ«ГҐГ¬ГҐГ­ГІГ» Г¤ГўГЁГ¦ГҐГ­ГЁГї Г¤Г«Гї Г®ГЎГєГҐГЄГІГ "
+		//Р•СЃР»Рё Р°РЅРёРјР°С†РёСЏ РЅРµ РІРёРґРЅР°, СѓРјРµРЅСЊС€РёС‚СЊ РґРµР»РёС‚РµР»СЊ 
+		points[0] = points[0] + cos(timeValue) / 20000;
+		points[1] = points[1] + cos(timeValue) / 20000;
+		points[3] = points[3] + cos(timeValue) / 20000;
+		points[4] = points[4] + cos(timeValue) / 20000;
+		points[6] = points[6] + cos(timeValue) / 20000;
+		points[7] = points[7] + cos(timeValue) / 20000;
+		points[9] = points[9] + cos(timeValue) / 20000;
+		points[10] = points[10] + cos(timeValue) / 20000;
 		glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
 
 		shadering.uniform_set_vec(shader_program, "in_color", 1 - sin(timeValue), cos(timeValue), sin(timeValue), 1.0f);
