@@ -185,6 +185,7 @@ public:
 		}
 	}
 
+
 	//Передает только адрес uniform-переменной
 	float get_attribute(GLuint shader_program, std::string attribute_name) {
 		const GLchar* gl_attribute_name = reinterpret_cast<const GLchar*>(attribute_name.c_str());

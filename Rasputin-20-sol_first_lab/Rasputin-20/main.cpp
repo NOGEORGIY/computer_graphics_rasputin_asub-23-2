@@ -5,6 +5,9 @@
 #include "GLFW/glfw3.h"
 #include <math.h>
 #include "shader_loader.h"
+#include "glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 int main() {
 	if (!glfwInit()) {
@@ -70,9 +73,38 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBindVertexArray(0);
 
+	glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 91.0f);
+	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraDirection = glm::normalize(cameraPosition - cameraTarget);
+	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec3 cameraRight = glm::normalize(glm::cross(cameraUp, cameraDirection));
+	//glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
+
+	const unsigned int SCR_WIDTH = 1024;
+	const unsigned int SCR_HEIGHT = 768;
+
+	float lastX = SCR_WIDTH / 2;
+	float lastY = SCR_HEIGHT / 2;
+
+	glm::mat4 projection = glm::perspective(
+		glm::radians(45.0f),
+		(float)SCR_WIDTH / (float)SCR_HEIGHT,
+		0.1f,
+		100.0f);
+
+	glm::mat4 view =  glm::lookAt(
+		cameraPosition,
+		cameraPosition+ cameraTarget,
+		cameraUp);
+
+	
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
+
+		shadering.uniform_set_vec(shader_program, "projection", 1, &projection[0][0], false, shadering.M4);
+		shadering.uniform_set_vec(shader_program, "view", 1, &view[0][0], false, shadering.M4);
+
 		float timeValue = glfwGetTime();
 		//"Ïðè ñîçäàíèè ðåíäåðà äîáàâèòü ýëåìåíòû äâèæåíèÿ äëÿ îáúåêòà"
 		//Если анимация не видна, уменьшить делитель 
