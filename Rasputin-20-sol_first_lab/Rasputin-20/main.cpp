@@ -9,6 +9,44 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+
+GLfloat yaw = -90.0f;
+GLfloat pitch = 0.0f;
+bool firstMouse = true;
+const unsigned int SCR_WIDTH = 1024;
+const unsigned int SCR_HEIGHT = 768;
+float lastX = SCR_WIDTH / 2;
+float lastY = SCR_HEIGHT / 2;
+
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
+
+	if (firstMouse) {
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos;
+	lastX = xpos;
+	lastY = ypos;
+
+	float sensitivity = 0.1f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+}
+
 int main() {
 	if (!glfwInit()) {
 		fprintf(stderr, "ERROR: couldn't start GLFW3\n");
@@ -37,9 +75,6 @@ int main() {
 		return 1;
 	}
 
-	//Â VBO çàïèñûâàþòñÿ âåðøèíû
-	//VAO íóæíî äëÿ îòðèñîâêè
-	//EBO õðàíèò èíäåêñû âåðøèí, âûáèðàÿ êîòîðûå ìîæíî ðèñîâàòü ôèãóðû
 	GLuint VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -64,41 +99,63 @@ int main() {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STREAM_DRAW);
 
-	//Çàãðóæàåò øåéäåðû èç ôàéëîâ è ïîäêëþ÷àåò èõ â ïðîãó
 	Shader_loader shadering;
 	GLuint shader_program = shadering.oneLinkProgram();
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); //Ñîîáùàåò êàê èíòåðïðåòèðîâàòü âåðøèííûå äàííûå. 
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);  
 	glEnableVertexAttribArray(0); 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBindVertexArray(0);
 
-	glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 91.0f);
+	
+	glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
 	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, -1.0f);
 	glm::vec3 cameraDirection = glm::normalize(cameraPosition - cameraTarget);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 cameraRight = glm::normalize(glm::cross(cameraUp, cameraDirection));
-	//glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
-
-	const unsigned int SCR_WIDTH = 1024;
-	const unsigned int SCR_HEIGHT = 768;
-
-	float lastX = SCR_WIDTH / 2;
-	float lastY = SCR_HEIGHT / 2;
-
-	glm::mat4 projection = glm::perspective(
-		glm::radians(45.0f),
-		(float)SCR_WIDTH / (float)SCR_HEIGHT,
-		0.1f,
-		100.0f);
-
-	glm::mat4 view =  glm::lookAt(
-		cameraPosition,
-		cameraPosition+ cameraTarget,
-		cameraUp);
-
 	
 	while (!glfwWindowShouldClose(window)) {
+
+		const unsigned int SCR_WIDTH = 1024;
+		const unsigned int SCR_HEIGHT = 768;
+
+		float lastX = SCR_WIDTH / 2;
+		float lastY = SCR_HEIGHT / 2;
+
+		glm::vec3 front;
+		front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		front.y = sin(glm::radians(pitch));
+		front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+		cameraTarget = glm::normalize(front);
+
+		glm::mat4 projection = glm::perspective(
+			glm::radians(45.0f),
+			(float)SCR_WIDTH / (float)SCR_HEIGHT,
+			0.1f,
+			100.0f);
+
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		
+		glfwSetCursorPosCallback(window, mouse_callback);
+
+		const float cameraSpeed = 0.05f;
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+			cameraPosition += cameraSpeed * cameraTarget;
+
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+			cameraPosition -= cameraSpeed * cameraTarget;
+
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+			cameraPosition += glm::normalize(glm::cross(cameraTarget, cameraUp)) * cameraSpeed;
+
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+			cameraPosition -= glm::normalize(glm::cross(cameraTarget, cameraUp)) * cameraSpeed;
+
+		glm::mat4 view = glm::lookAt(
+			cameraPosition,
+			cameraPosition + cameraTarget,
+			cameraUp);
+		
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
 
