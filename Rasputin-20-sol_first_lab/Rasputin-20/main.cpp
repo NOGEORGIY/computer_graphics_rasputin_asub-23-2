@@ -146,10 +146,10 @@ int main() {
 			cameraPosition -= cameraSpeed * cameraTarget;
 
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			cameraPosition += glm::normalize(glm::cross(cameraTarget, cameraUp)) * cameraSpeed;
+			cameraPosition -= glm::normalize(glm::cross(cameraTarget, cameraUp)) * cameraSpeed;
 
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			cameraPosition -= glm::normalize(glm::cross(cameraTarget, cameraUp)) * cameraSpeed;
+			cameraPosition += glm::normalize(glm::cross(cameraTarget, cameraUp)) * cameraSpeed;
 
 		glm::mat4 view = glm::lookAt(
 			cameraPosition,
