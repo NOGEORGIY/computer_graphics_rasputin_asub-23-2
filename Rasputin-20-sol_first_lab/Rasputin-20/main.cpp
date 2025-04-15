@@ -3,11 +3,63 @@
 #include <cstdio>
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
+
 #include <math.h>
 #include "shader_loader.h"
+
 #include "glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "assimp/Importer.hpp"
+#include "assimp/scene.h"
+#include "assimp/postprocess.h"
+
+#include "Mesh.h"
+#include "Model.h"
+
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <vector>
+
+
+GLfloat yaw = -90.0f;
+GLfloat pitch = 0.0f;
+bool firstMouse = true;
+const unsigned int SCR_WIDTH = 1024;
+const unsigned int SCR_HEIGHT = 768;
+float lastX = SCR_WIDTH / 2;
+float lastY = SCR_HEIGHT / 2;
+
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
+
+	if (firstMouse) {
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos;
+	lastX = xpos;
+	lastY = ypos;
+
+	float sensitivity = 0.1f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+}
 
 int main() {
 	if (!glfwInit()) {
@@ -37,9 +89,6 @@ int main() {
 		return 1;
 	}
 
-	//Â VBO çàïèñûâàþòñÿ âåðøèíû
-	//VAO íóæíî äëÿ îòðèñîâêè
-	//EBO õðàíèò èíäåêñû âåðøèí, âûáèðàÿ êîòîðûå ìîæíî ðèñîâàòü ôèãóðû
 	GLuint VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -64,51 +113,78 @@ int main() {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STREAM_DRAW);
 
-	//Çàãðóæàåò øåéäåðû èç ôàéëîâ è ïîäêëþ÷àåò èõ â ïðîãó
 	Shader_loader shadering;
 	GLuint shader_program = shadering.oneLinkProgram();
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); //Ñîîáùàåò êàê èíòåðïðåòèðîâàòü âåðøèííûå äàííûå. 
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);  
 	glEnableVertexAttribArray(0); 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBindVertexArray(0);
 
-	glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 91.0f);
+	
+	glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
 	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, -1.0f);
 	glm::vec3 cameraDirection = glm::normalize(cameraPosition - cameraTarget);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 cameraRight = glm::normalize(glm::cross(cameraUp, cameraDirection));
-	//glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
-
-	const unsigned int SCR_WIDTH = 1024;
-	const unsigned int SCR_HEIGHT = 768;
-
-	float lastX = SCR_WIDTH / 2;
-	float lastY = SCR_HEIGHT / 2;
-
-	glm::mat4 projection = glm::perspective(
-		glm::radians(45.0f),
-		(float)SCR_WIDTH / (float)SCR_HEIGHT,
-		0.1f,
-		100.0f);
-
-	glm::mat4 view =  glm::lookAt(
-		cameraPosition,
-		cameraPosition+ cameraTarget,
-		cameraUp);
-
+	glm::mat4 model = glm::mat4(1.0f);
+	shadering.uniform_set_vec(shader_program, "model", 1, &model[0][0], false, shadering.M4);
 	
+	Model modell("15var_rasputin_120iD.obj");
 	while (!glfwWindowShouldClose(window)) {
+
+		const unsigned int SCR_WIDTH = 1024;
+		const unsigned int SCR_HEIGHT = 768;
+
+		float lastX = SCR_WIDTH / 2;
+		float lastY = SCR_HEIGHT / 2;
+
+		glm::vec3 front;
+		front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		front.y = sin(glm::radians(pitch));
+		front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+		cameraTarget = glm::normalize(front);
+
+		glm::mat4 projection = glm::perspective(
+			glm::radians(45.0f),
+			(float)SCR_WIDTH / (float)SCR_HEIGHT,
+			0.1f,
+			100.0f);
+
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		
+		glfwSetCursorPosCallback(window, mouse_callback);
+
+		const float cameraSpeed = 0.05f;
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+			cameraPosition += cameraSpeed * cameraTarget;
+
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+			cameraPosition -= cameraSpeed * cameraTarget;
+
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+			cameraPosition -= glm::normalize(glm::cross(cameraTarget, cameraUp)) * cameraSpeed;
+
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+			cameraPosition += glm::normalize(glm::cross(cameraTarget, cameraUp)) * cameraSpeed;
+
+		glm::mat4 view = glm::lookAt(
+			cameraPosition,
+			cameraPosition + cameraTarget,
+			cameraUp);
+		
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
 
-		shadering.uniform_set_vec(shader_program, "projection", 1, &projection[0][0], false, shadering.M4);
-		shadering.uniform_set_vec(shader_program, "view", 1, &view[0][0], false, shadering.M4);
+		
+		shadering.uniform_set_vec(shader_program, "model", 1, glm::value_ptr(model), GL_FALSE, shadering.M4);
+		shadering.uniform_set_vec(shader_program, "view", 1, glm::value_ptr(view), GL_FALSE, shadering.M4);
+		shadering.uniform_set_vec(shader_program, "projection", 1, glm::value_ptr(projection), GL_FALSE, shadering.M4);
 
 		float timeValue = glfwGetTime();
 		//"Ïðè ñîçäàíèè ðåíäåðà äîáàâèòü ýëåìåíòû äâèæåíèÿ äëÿ îáúåêòà"
 		//Если анимация не видна, уменьшить делитель 
-		points[0] = points[0] + cos(timeValue) / 20000;
+		/*points[0] = points[0] + cos(timeValue) / 20000;
 		points[1] = points[1] + cos(timeValue) / 20000;
 		points[3] = points[3] + cos(timeValue) / 20000;
 		points[4] = points[4] + cos(timeValue) / 20000;
@@ -117,13 +193,16 @@ int main() {
 		points[9] = points[9] + cos(timeValue) / 20000;
 		points[10] = points[10] + cos(timeValue) / 20000;
 		glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
-
+		*/
 		shadering.uniform_set_vec(shader_program, "in_color", 1 - sin(timeValue), cos(timeValue), sin(timeValue), 1.0f);
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
+		shadering.uniform_set_vec(shader_program, "lightColor", 1.0f, 1.0f, 0.01f);
+		//glBindVertexArray(VAO);
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		
+		modell.Draw(shadering, shader_program);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
 	}
 	glfwTerminate();
 	return 0;

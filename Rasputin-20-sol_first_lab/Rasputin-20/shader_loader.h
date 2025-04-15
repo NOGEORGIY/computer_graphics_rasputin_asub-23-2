@@ -191,4 +191,8 @@ public:
 		const GLchar* gl_attribute_name = reinterpret_cast<const GLchar*>(attribute_name.c_str());
 		float vertexColorLocation = glGetUniformLocation(shader_program, gl_attribute_name);
 	}
+
+	void use(GLuint shader_program) {
+		glUseProgram(shader_program);
+	}
 };

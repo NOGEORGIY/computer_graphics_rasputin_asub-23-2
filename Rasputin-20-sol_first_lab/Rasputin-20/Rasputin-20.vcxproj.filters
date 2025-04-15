@@ -22,6 +22,12 @@
     <ClInclude Include="shader_loader.h">
       <Filter>Файлы ресурсов</Filter>
     </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Файлы ресурсов</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Файлы ресурсов</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="vertex_shader.glsl">
