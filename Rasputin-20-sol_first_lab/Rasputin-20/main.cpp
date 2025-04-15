@@ -3,11 +3,25 @@
 #include <cstdio>
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
+
 #include <math.h>
 #include "shader_loader.h"
+
 #include "glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "assimp/Importer.hpp"
+#include "assimp/scene.h"
+#include "assimp/postprocess.h"
+
+#include "Mesh.h"
+#include "Model.h"
+
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <vector>
 
 
 GLfloat yaw = -90.0f;
@@ -113,7 +127,10 @@ int main() {
 	glm::vec3 cameraDirection = glm::normalize(cameraPosition - cameraTarget);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 cameraRight = glm::normalize(glm::cross(cameraUp, cameraDirection));
+	glm::mat4 model = glm::mat4(1.0f);
+	shadering.uniform_set_vec(shader_program, "model", 1, &model[0][0], false, shadering.M4);
 	
+	Model modell("15var_rasputin_120iD.obj");
 	while (!glfwWindowShouldClose(window)) {
 
 		const unsigned int SCR_WIDTH = 1024;
@@ -159,13 +176,15 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
 
-		shadering.uniform_set_vec(shader_program, "projection", 1, &projection[0][0], false, shadering.M4);
-		shadering.uniform_set_vec(shader_program, "view", 1, &view[0][0], false, shadering.M4);
+		
+		shadering.uniform_set_vec(shader_program, "model", 1, glm::value_ptr(model), GL_FALSE, shadering.M4);
+		shadering.uniform_set_vec(shader_program, "view", 1, glm::value_ptr(view), GL_FALSE, shadering.M4);
+		shadering.uniform_set_vec(shader_program, "projection", 1, glm::value_ptr(projection), GL_FALSE, shadering.M4);
 
 		float timeValue = glfwGetTime();
 		//"Ïðè ñîçäàíèè ðåíäåðà äîáàâèòü ýëåìåíòû äâèæåíèÿ äëÿ îáúåêòà"
 		//Если анимация не видна, уменьшить делитель 
-		points[0] = points[0] + cos(timeValue) / 20000;
+		/*points[0] = points[0] + cos(timeValue) / 20000;
 		points[1] = points[1] + cos(timeValue) / 20000;
 		points[3] = points[3] + cos(timeValue) / 20000;
 		points[4] = points[4] + cos(timeValue) / 20000;
@@ -174,13 +193,16 @@ int main() {
 		points[9] = points[9] + cos(timeValue) / 20000;
 		points[10] = points[10] + cos(timeValue) / 20000;
 		glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
-
+		*/
 		shadering.uniform_set_vec(shader_program, "in_color", 1 - sin(timeValue), cos(timeValue), sin(timeValue), 1.0f);
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
+		shadering.uniform_set_vec(shader_program, "lightColor", 1.0f, 1.0f, 0.01f);
+		//glBindVertexArray(VAO);
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		
+		modell.Draw(shadering, shader_program);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
 	}
 	glfwTerminate();
 	return 0;
