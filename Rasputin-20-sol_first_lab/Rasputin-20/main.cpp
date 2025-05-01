@@ -92,27 +92,7 @@ int main() {
 	GLuint VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-
-	GLfloat points[] = {
-	-0.4f, -0.2f, 0.0f,
-	-0.4f, 0.4f, 0.0f,
-	0.4f, 0.4f, 0.0f,
-	0.4f, -0.2f, 0.0f,
-	};
-
-	GLuint elements[] = {
-	0, 1, 2,
-	2, 3, 0
-	};
-
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STREAM_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STREAM_DRAW);
-
+	
 	Shader_loader shadering;
 	GLuint shader_program = shadering.oneLinkProgram();
 
@@ -121,7 +101,6 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBindVertexArray(0);
 
-	
 	glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
 	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, -1.0f);
 	glm::vec3 cameraDirection = glm::normalize(cameraPosition - cameraTarget);
@@ -131,6 +110,9 @@ int main() {
 	shadering.uniform_set_vec(shader_program, "model", 1, &model[0][0], false, shadering.M4);
 	
 	Model modell("15var_rasputin_120iD.obj");
+
+	
+	glEnable(GL_DEPTH_TEST);
 	while (!glfwWindowShouldClose(window)) {
 
 		const unsigned int SCR_WIDTH = 1024;
@@ -172,8 +154,8 @@ int main() {
 			cameraPosition,
 			cameraPosition + cameraTarget,
 			cameraUp);
-		
-		glClear(GL_COLOR_BUFFER_BIT);
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUseProgram(shader_program);
 
 		
@@ -182,23 +164,24 @@ int main() {
 		shadering.uniform_set_vec(shader_program, "projection", 1, glm::value_ptr(projection), GL_FALSE, shadering.M4);
 
 		float timeValue = glfwGetTime();
-		//"Ïðè ñîçäàíèè ðåíäåðà äîáàâèòü ýëåìåíòû äâèæåíèÿ äëÿ îáúåêòà"
-		//Если анимация не видна, уменьшить делитель 
-		/*points[0] = points[0] + cos(timeValue) / 20000;
-		points[1] = points[1] + cos(timeValue) / 20000;
-		points[3] = points[3] + cos(timeValue) / 20000;
-		points[4] = points[4] + cos(timeValue) / 20000;
-		points[6] = points[6] + cos(timeValue) / 20000;
-		points[7] = points[7] + cos(timeValue) / 20000;
-		points[9] = points[9] + cos(timeValue) / 20000;
-		points[10] = points[10] + cos(timeValue) / 20000;
-		glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
-		*/
 		shadering.uniform_set_vec(shader_program, "in_color", 1 - sin(timeValue), cos(timeValue), sin(timeValue), 1.0f);
-		shadering.uniform_set_vec(shader_program, "lightColor", 1.0f, 1.0f, 0.01f);
-		//glBindVertexArray(VAO);
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		
+		glm::vec3 lightColor = glm::vec3(0.88005553535, 0.88005553535, 0.88005553535);
+		glm::vec3 lightAmbient = lightColor * glm::vec3(0.1);
+		glm::vec3 lightDiffuse = lightColor * glm::vec3(0.8);
+		glm::vec3 lightSpecular = lightColor * glm::vec3(1.0);
+		glm::vec3 lightPos = glm::vec3(1.0f, 1.0f, 1.0f);
+
+		shadering.uniform_set_vec(shader_program, "material.ambient", 0.1f, 0.0f, 0.1f);
+		shadering.uniform_set_vec(shader_program, "material.diffuse", 0.9f, 0.2f, 0.9f);
+		shadering.uniform_set_vec(shader_program, "material.specular", 1.0f, 0.7f, 1.0f);
+		shadering.uniform_set_vec(shader_program, "material.shininess", 64.0f);
+
+		shadering.uniform_set_vec(shader_program, "light_1.ambient", lightAmbient[0], lightAmbient[1], lightAmbient[2]);
+		shadering.uniform_set_vec(shader_program, "light_1.diffuse", lightDiffuse[0], lightDiffuse[1], lightDiffuse[2]);
+		shadering.uniform_set_vec(shader_program, "light_1.specular", lightSpecular[0], lightSpecular[1], lightSpecular[2]);
+		shadering.uniform_set_vec(shader_program, "light_1.position", lightPos[0], lightPos[1], lightPos[2]);
+		shadering.uniform_set_vec(shader_program, "viewPos", cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+
 		modell.Draw(shadering, shader_program);
 		glfwSwapBuffers(window);
 		glfwPollEvents();

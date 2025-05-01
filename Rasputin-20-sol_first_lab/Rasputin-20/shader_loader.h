@@ -86,6 +86,7 @@ public:
 		float vertexColorLocation = glGetUniformLocation(shader_program, gl_attribute_name);
 		glUniform3f(vertexColorLocation, x, y, z);
 	}
+
 	void uniform_set_vec(GLuint shader_program, std::string attribute_name, float x, float y, float z, float a) {
 		const GLchar* gl_attribute_name = reinterpret_cast<const GLchar*>(attribute_name.c_str());
 		float vertexColorLocation = glGetUniformLocation(shader_program, gl_attribute_name);
