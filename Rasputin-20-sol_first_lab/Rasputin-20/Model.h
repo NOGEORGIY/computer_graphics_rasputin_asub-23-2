@@ -33,9 +33,40 @@ public:
         loadModel(path);
     }
        
-    void Draw(Shader_loader& shader, GLuint shader_program)
+    void Draw(Shader_loader& shader, GLuint shader_program, glm::mat4 transformOX1, glm::mat4 transformOX2, glm::mat4 transformOX3)
     {
         for (int i = 0; i < meshes.size(); i++) {
+            switch (i){
+            case 0: {
+                shader.uniform_set_vec(shader_program, "model", 1, glm::value_ptr(transformOX1), GL_FALSE, shader.M4);
+                break;
+            }
+
+            case 3: {
+                glm::mat4 minusTranslateOX2 = glm::translate(glm::mat4(1.0f), glm::vec3(0, 1.1897, 0.359926));
+                glm::mat4 TranslateOX2 = glm::translate(glm::mat4(1.0f), glm::vec3(0, -1.1897, -0.359926));
+                glm::mat4 result = transformOX1 * minusTranslateOX2  * transformOX2 * TranslateOX2 ;
+
+                shader.uniform_set_vec(shader_program, "model", 1, glm::value_ptr(result), GL_FALSE, shader.M4);
+                break;
+            }
+ 
+            case 1: {
+                glm::mat4 minusTranslateOX2 = glm::translate(glm::mat4(1.0f), glm::vec3(0, 1.1897, 0.359926));
+                glm::mat4 TranslateOX2 = glm::translate(glm::mat4(1.0f), glm::vec3(0, -1.1897, -0.359926));
+                glm::mat4 result1 = minusTranslateOX2 * transformOX2 * TranslateOX2;
+
+                glm::mat4 minusTranslateOX3 = glm::translate(glm::mat4(1.0f), glm::vec3(0, 2.88593, 0.461069));
+                glm::mat4 TranslateOX3 = glm::translate(glm::mat4(1.0f), glm::vec3(0, -2.88593, -0.461069));
+                glm::mat4 result = transformOX1 * result1 * minusTranslateOX3 *  transformOX3 * TranslateOX3;
+
+                shader.uniform_set_vec(shader_program, "model", 1, glm::value_ptr(result), GL_FALSE, shader.M4); 
+                break;
+            }
+            default:
+                shader.uniform_set_vec(shader_program, "model", 1, glm::value_ptr(glm::mat4(1.0f)), GL_FALSE, shader.M4);
+                break;
+            }
             meshes[i].Draw(shader, shader_program);
         }
     }
